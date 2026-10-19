@@ -233,6 +233,12 @@
       margin-top: 12px;
       font-size: 15px;
     }
+
+    @media (max-width: 768px) {
+      #info-panel { max-width: 300px; font-size: 12px; }
+      #room-navigator { max-width: 240px; }
+      #controls { font-size: 11px; }
+    }
   </style>
 </head>
 <body>
@@ -242,7 +248,7 @@
 <div id="info-panel">
   <div id="mode-badge" class="current">🏛️ 現況場景</div>
   <div id="room-title">安台共造園區</div>
-  <div id="room-desc">載入真實空間照片中...</div>
+  <div id="room-desc">載入真實建築照片中...</div>
 </div>
 
 <div id="controls">
@@ -287,68 +293,62 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 // =============================================
-// 真實空間資料（使用你的照片）
+// 真實空間資料（基於你的 10 張照片）
 // =============================================
 const ROOMS = [
   {
     id: 1,
     name: '木地板評估室',
-    desc: '深色木天花板空間，配備大型木質衣櫃，可通往廚房區域',
+    desc: '深色木質天花板空間，配備大型木衣櫃，可通往廚房與其他房間',
     image: 'S__23953432_0.jpg',
-    position: [0, 3.5, 0],
-    size: [8, 3.5, 6],
-    floor: '2F',
-    connections: [2, 3]
+    position: [0, 4, 0],
+    size: [8, 3.2, 6],
+    floor: '2F'
   },
   {
     id: 2,
     name: '無障礙衛浴空間',
-    desc: '白色磁磚浴室，配備古典金腳浴缸與立柱盥洗設備',
+    desc: '白色磁磚浴室，配備古典金腳浴缸、立柱洗手盆與馬桶',
     image: 'S__23953433_0.jpg',
-    position: [10, 3.5, 0],
-    size: [5, 3, 4],
-    floor: '2F',
-    connections: [1]
+    position: [10, 4, 0],
+    size: [4.5, 3, 3.5],
+    floor: '2F'
   },
   {
     id: 3,
     name: '玄關過渡區',
-    desc: '黑白棋盤地板與木地板交界處，設有木質隔間屏風',
+    desc: '黑白大理石棋盤地板與木地板交界，設有木質屏風隔間',
     image: 'S__23953434_0.jpg',
-    position: [0, 3.5, -8],
-    size: [8, 3.5, 5],
-    floor: '2F',
-    connections: [1, 4]
+    position: [0, 4, -8],
+    size: [8, 3.2, 5],
+    floor: '2F'
   },
   {
     id: 4,
     name: '主活動客廳',
-    desc: '黑白棋盤地板主廳，配備大窗景、書架、電視與木質沙發',
+    desc: '黑白棋盤地板主廳，配備大窗景、書櫃、電視與實木沙發',
     image: 'S__23953435_0.jpg',
-    position: [-12, 3.5, 0],
-    size: [10, 3.5, 8],
-    floor: '2F',
-    connections: [3, 5]
+    position: [-12, 4, 0],
+    size: [10, 3.2, 8],
+    floor: '2F'
   },
   {
     id: 5,
     name: '二樓樓梯平台',
-    desc: '挑高天井空間，鐵藝欄杆設計，可俯瞰一樓',
+    desc: '挑高天井空間，精緻鐵藝欄杆設計，可俯瞰一樓客廳',
     image: 'S__23953436_0.jpg',
-    position: [0, 3.5, 10],
+    position: [0, 4, 10],
     size: [6, 5, 6],
-    floor: '2F',
-    connections: [4, 6, 7]
+    floor: '2F'
   },
   {
     id: 6,
     name: '電梯迎賓廳',
-    desc: '金色菱形圖案裝飾電梯門，連接各樓層',
+    desc: '金色菱形圖案裝飾電梯門，連接各樓層的優雅空間',
     image: 'S__23953437_0.jpg',
-    position: [8, 3.5, 10],
+    position: [8, 4, 10],
     size: [5, 3.5, 5],
-    floor: '2F',
-    connections: [5, 8]
+    floor: '2F'
   },
   {
     id: 7,
@@ -357,50 +357,88 @@ const ROOMS = [
     image: 'S__23953438_0.jpg',
     position: [0, 0, 0],
     size: [12, 6, 10],
-    floor: '1F',
-    connections: [5, 8, 9]
+    floor: '1F'
   },
   {
     id: 8,
     name: '休閒交流客廳',
-    desc: '橘色皮沙發、藤椅與鳥類裝飾牆面，磨石子地板',
+    desc: '橘色皮沙發、藤椅與精美鳥類剪影牆飾，磨石子地板',
     image: 'S__23953439_0.jpg',
     position: [-15, 0, 0],
     size: [8, 3.5, 7],
-    floor: '1F',
-    connections: [6, 7, 9]
+    floor: '1F'
   },
   {
     id: 9,
     name: '主要通道長廊',
-    desc: '磨石子地板長廊，木質護牆板與吊燈，入口處有高低差',
+    desc: '磨石子地板長廊，木質護牆板與復古吊燈，入口處有門檻高低差',
     image: 'S__23953440_0.jpg',
     position: [0, 0, -12],
     size: [15, 3.5, 4],
-    floor: '1F',
-    connections: [7, 8, 10]
+    floor: '1F'
   },
   {
     id: 10,
     name: '樓梯轉角展示區',
-    desc: '黑白棋盤地板樓梯轉角，木質護牆板與展示櫃',
+    desc: '黑白大理石棋盤地板樓梯轉角，木質護牆板與展示櫃',
     image: 'S__23953441_0.jpg',
     position: [10, 0, -8],
     size: [6, 5, 6],
-    floor: '1F',
-    connections: [9, 5]
+    floor: '1F'
   }
 ];
 
 // 未來改造家具（失智症日照據點規劃）
 const FUTURE_FURNITURE = [
-  { name: '圓角認知活動桌', position: [-14, 0.8, 2], size: [2, 0.8, 1.5], color: 0xf4a460 },
-  { name: '安全扶手椅 x4', position: [-15.5, 0.5, 2], size: [0.6, 1, 0.6], color: 0x4682b4 },
-  { name: '教具收納櫃', position: [-18, 1, 0], size: [1.5, 2, 0.5], color: 0x8b4513 },
-  { name: '75吋互動螢幕', position: [2, 2, -11.8], size: [1.8, 1, 0.1], color: 0x1a1a1a },
-  { name: '懷舊佈告欄', position: [-18, 2, 3], size: [1.2, 1.5, 0.1], color: 0xdaa520 },
-  { name: '無障礙洗手台', position: [12, 0.9, 1], size: [1.2, 0.9, 0.6], color: 0xffffff },
-  { name: '休憩沙發區', position: [3, 0.6, 3], size: [3, 0.8, 2], color: 0xff6347 }
+  { 
+    name: '圓角認知活動桌', 
+    desc: '適合失智長者的圓角桌，用於拼圖、畫畫等認知訓練',
+    position: [-14, 0.8, 2], 
+    size: [2, 0.8, 1.5], 
+    color: 0xf4a460 
+  },
+  { 
+    name: '安全扶手椅 x4', 
+    desc: '兩側扶手設計，協助長者安全起身',
+    position: [-15.5, 0.5, 2], 
+    size: [0.6, 1, 0.6], 
+    color: 0x4682b4 
+  },
+  { 
+    name: '教具收納櫃', 
+    desc: '收納認知訓練教具、桌遊與美勞材料',
+    position: [-18, 1, 0], 
+    size: [1.5, 2, 0.5], 
+    color: 0x8b4513 
+  },
+  { 
+    name: '75吋互動觸控螢幕', 
+    desc: '播放懷舊影片、音樂與互動認知遊戲',
+    position: [2, 2, -11.8], 
+    size: [1.8, 1, 0.1], 
+    color: 0x1a1a1a 
+  },
+  { 
+    name: '懷舊記憶牆', 
+    desc: '展示老照片、舊物件，喚起長者回憶',
+    position: [-18, 2, 3], 
+    size: [1.2, 1.5, 0.1], 
+    color: 0xdaa520 
+  },
+  { 
+    name: '無障礙洗手台', 
+    desc: '符合輪椅使用者高度的洗手設施',
+    position: [12, 0.9, 1], 
+    size: [1.2, 0.9, 0.6], 
+    color: 0xffffff 
+  },
+  { 
+    name: '休憩沙發區', 
+    desc: '舒適沙發供家屬與長者交流休息',
+    position: [3, 0.6, 3], 
+    size: [3, 0.8, 2], 
+    color: 0xff6347 
+  }
 ];
 
 // =============================================
@@ -412,6 +450,8 @@ let furnitureGroup = new THREE.Group();
 let currentMode = 'current';
 let currentRoomId = 1;
 let loadedImages = 0;
+let raycaster = new THREE.Raycaster();
+let mouse = new THREE.Vector2();
 
 function init() {
   // 場景
@@ -421,12 +461,13 @@ function init() {
 
   // 相機
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
-  camera.position.set(15, 12, 15);
+  camera.position.set(18, 12, 18);
 
   // 渲染器
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   document.getElementById('canvas-container').appendChild(renderer.domElement);
 
@@ -478,39 +519,35 @@ function init() {
 function buildRealSpaces() {
   const textureLoader = new THREE.TextureLoader();
 
-  ROOMS.forEach((room, index) => {
+  ROOMS.forEach((room) => {
     textureLoader.load(
       room.image,
       (texture) => {
         createRoom(room, texture);
         loadedImages++;
-        document.getElementById('loading-progress').textContent = 
-          `載入照片 ${loadedImages}/10`;
-
-        if (loadedImages === 10) {
-          setTimeout(() => {
-            document.getElementById('loading').classList.add('hidden');
-            focusRoom(1);
-          }, 800);
-        }
+        updateLoadingProgress();
       },
       undefined,
       (error) => {
-        console.warn(`無法載入 ${room.image}，使用預設紋理`);
+        console.warn(`載入 ${room.image} 失敗，使用預設材質`);
         createRoom(room, null);
         loadedImages++;
-        document.getElementById('loading-progress').textContent = 
-          `載入照片 ${loadedImages}/10`;
-
-        if (loadedImages === 10) {
-          setTimeout(() => {
-            document.getElementById('loading').classList.add('hidden');
-            focusRoom(1);
-          }, 800);
-        }
+        updateLoadingProgress();
       }
     );
   });
+}
+
+function updateLoadingProgress() {
+  document.getElementById('loading-progress').textContent = 
+    `載入照片 ${loadedImages}/10`;
+
+  if (loadedImages === 10) {
+    setTimeout(() => {
+      document.getElementById('loading').classList.add('hidden');
+      focusRoom(1);
+    }, 600);
+  }
 }
 
 function createRoom(roomData, texture) {
@@ -519,20 +556,20 @@ function createRoom(roomData, texture) {
   const [w, h, d] = roomData.size;
 
   group.position.set(x, y, z);
-  group.userData = { roomId: roomData.id, roomName: roomData.name };
+  group.userData = { roomId: roomData.id, roomName: roomData.name, roomDesc: roomData.desc };
 
   // 地板
   const floorGeo = new THREE.BoxGeometry(w, 0.15, d);
   const floorMat = new THREE.MeshStandardMaterial({ 
     color: 0x8b8680,
-    roughness: 0.8
+    roughness: 0.7
   });
   const floor = new THREE.Mesh(floorGeo, floorMat);
   floor.receiveShadow = true;
   floor.userData = { type: 'floor', roomId: roomData.id };
   group.add(floor);
 
-  // 牆壁（使用真實照片）
+  // 牆壁材質
   const wallMat = texture 
     ? new THREE.MeshStandardMaterial({ 
         map: texture,
@@ -572,7 +609,7 @@ function createRoom(roomData, texture) {
 
   // 房間標籤
   const label = createLabel(roomData.name, roomData.floor);
-  label.position.y = h + 0.8;
+  label.position.y = h + 1;
   group.add(label);
 
   scene.add(group);
@@ -601,7 +638,7 @@ function createLabel(name, floor) {
   const texture = new THREE.CanvasTexture(canvas);
   const material = new THREE.SpriteMaterial({ map: texture });
   const sprite = new THREE.Sprite(material);
-  sprite.scale.set(4.5, 1.3, 1);
+  sprite.scale.set(5, 1.5, 1);
 
   return sprite;
 }
@@ -610,4 +647,8 @@ function createLabel(name, floor) {
 // 建立未來家具
 // =============================================
 function buildFutureFurniture() {
-  FUTURE_FURNITURE.forEach(
+  FUTURE_FURNITURE.forEach(item => {
+    const [w, h, d] = item.size;
+    const geo = new THREE.BoxGeometry(w, h, d);
+    const mat = new THREE.MeshStandardMaterial({ 
+      
