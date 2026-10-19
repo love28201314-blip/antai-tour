@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>安台共造園區｜虛擬實景導覽系統</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+
+    body {
+      overflow: hidden;
+      background: #0a0a0a;
+    }
+
+    /* 主視圖容器 */
+    #viewer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+    }
+
+    /* 當前空間圖片 */
+    #current-space-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #current-space-image.fade-out {
+      opacity: 0;
+    }
+
+    /* 頂部資訊列 */
+    #top-info {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 70%, transparent 100%);
+      padding: 25px 30px;
+      z-index: 100;
+      color: white;
+    }
+
+    #space-title {
+      font-size: 32px;
+      font-weight: 900;
+      margin-bottom: 8px;
+      text-shadow: 0 3px 15px rgba(0,0,0,0.8);
+      letter-spacing: 0.5px;
+    }
+
+    #space-description {
+      font-size: 17px;
+      opacity: 0.95;
+      font-weight: 500;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+    }
+
+    #space-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    /* 導航熱點 */
+    .navigation-hotspot {
+      position: absolute;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .hotspot-circle {
+      width: 90px;
+      height: 90px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: 4px solid white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      color: white;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 0 8px rgba(102, 126, 234, 0.3);
+      animation: pulse-hotspot 2.5s infinite;
+      position: relative;
+    }
+
+    .navigation-hotspot:hover .hotspot-circle {
+      transform: scale(1.2);
+      box-shadow: 0 12px 40px rgba(102, 126, 234, 0.8), 0 0 0 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .hotspot-label {
+      position: absolute;
+      bottom: -45px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.95);
+      color: #fbbf24;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+      border: 2px solid rgba(251, 191, 36, 0.5);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes pulse-hotspot {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    /* 小地圖 */
+    #minimap {
+      position: absolute;
+      bottom: 25px;
+      left: 25px;
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(20px);
+      padding: 20px;
+      border-radius: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      max-width: 320px;
+      z-index: 100;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    }
+
+    #minimap-title {
+      color: white;
+      font-size: 17px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 12px;
+    }
+
+    .map-node {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 12px 0;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .map-node:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      transform: translateX(5px);
+    }
+
+    .map-node.active {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+      color: #fbbf24;
+      border: 2px solid rgba(251, 191, 36, 0.5);
+    }
+
+    .map-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+
+    .map-node.active .map-dot {
+      background: #fbbf24;
+      box-shadow: 0 0 15px #fbbf24;
+      animation: blink-dot 1.8s infinite;
+    }
+
+    @keyframes blink-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+
+    /* 控制按鈕 */
+    #controls {
+      position: absolute;
+      bottom: 25px;
+      right: 25px;
+      display: flex;
+      gap: 15px;
+      z-index: 100;
+    }
+
+    .control-button {
+      width: 70px;
+      height: 70px;
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 18px;
+      color: white;
+      font-size: 30px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.6);
+    }
+
+    .control-button:hover {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-color: #fbbf24;
+      transform: scale(1.1);
+      box-shadow: 0 10px 35px rgba(102, 126, 234, 0.6);
+    }
+
+    /* 載入畫面 */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #1e1e2e 0%, #0a0a0f 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      transition: opacity 0.6s;
+    }
+
+    #loading-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .spinner {
+      width: 80px;
+      height: 80px;
+      border: 6px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #loading-text {
+      color: white;
+      margin-top: 30px;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    /* 過場提示 */
+    #transition-notice {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.95);
+      color: #fbbf24;
+      padding: 25px 50px;
+      border-radius: 20px;
+      font-size: 20px;
+      font-weight: 700;
+      z-index: 200;
+      display: none;
+      backdrop-filter: blur(15px);
+      border: 3px solid rgba(251, 191, 36, 0.5);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+    }
+
+    #transition-notice.show {
+      display: block;
+      animation: fadeInOut 1.8s;
+    }
+
+    @keyframes fadeInOut {
+      0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+      20%, 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    /* 響應式 */
+    @media (max-width: 768px) {
+      #space-title { font-size: 24px; }
+      #space-description { font-size: 15px; }
+      .hotspot-circle { width: 70px; height: 70px; font-size: 32px; }
+      #minimap { max-width: 260px; padding: 16px; bottom: 20px; left: 20px; }
+      #controls { bottom: 20px; right: 20px; }
+      .control-button { width: 60px; height: 60px; font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="viewer">
+  <img id="current-space-image" src="" alt="場域空間" />
+
+  <div id="top-info">
+    <div id="space-badge">🏛️ 安台共造園區</div>
+    <div id="space-title">載入中...</div>
+    <div id="space-description">準備開始虛擬導覽</div>
+  </div>
+
+  <div id="hotspots-layer"></div>
+
+  <div id="minimap">
+    <div id="minimap-title">🗺️ 場域導覽地圖</div>
+    <div id="minimap-list"></div>
+  </div>
+
+  <div id="controls">
+    <button class="control-button" id="btn-home" title="回到入口">🏠</button>
+    <button class="control-button" id="btn-info" title="空間資訊">ℹ️</button>
+  </div>
+
+  <div id="transition-notice">移動至下一個空間中...</div>
+</div>
+
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <div id="loading-text">載入虛擬導覽系統...</div>
+</div>
+
+<script>
+// ========================================
+// 場域空間配置資料（基於你的 10 張照片）
+// ========================================
+const SPACE_DATA = {
+  spaces: [
+    {
+      id: 'space-01',
+      name: '木地板評估室與教具儲藏室',
+      description: '深色木天花板空間，配備大型木質衣櫃，通往園區各處（對應照片 S__23953432_0.jpg）',
+      imageFile: 'S__23953432_0.jpg',
+      floor: '2F',
+      category: '評估與教學空間',
+      hotspots: [
+        { x: '70%', y: '50%', icon: '→', label: '前往浴室', targetId: 'space-02' },
+        { x: '35%', y: '55%', icon: '↙', label: '前往過渡區', targetId: 'space-03' }
+      ]
+    },
+    {
+      id: 'space-02',
+      name: '無障礙衛浴空間',
+      description: '白色磁磚浴室，配備古典金腳浴缸與立柱盥洗設備（對應照片 S__23953433_0.jpg）',
+      imageFile: 'S__23953433_0.jpg',
+      floor: '2F',
+      category: '衛浴設施',
+      hotspots: [
+        { x: '30%', y: '50%', icon: '←', label: '返回木地板室', targetId: 'space-01' },
+        { x: '70%', y: '50%', icon: '→', label: '前往主活動區', targetId: 'space-04' }
+      ]
+    },
+    {
+      id: 'space-03',
+      name: '地板材質過渡區',
+      description: '黑白棋盤地板與深色木地板交界處，設有木質隔間（對應照片 S__23953434_0.jpg）',
+      imageFile: 'S__23953434_0.jpg',
+      floor: '2F',
+      category: '過渡空間',
+      hotspots: [
+        { x: '25%', y: '50%', icon: '↖', label: '返回評估室', targetId: 'space-01' },
+        { x: '70%', y: '50%', icon: '→', label: '進入主客廳', targetId: 'space-04' }
+      ]
+    },
+    {
+      id: 'space-04',
+      name: '主活動客廳與書房區',
+      description: '黑白棋盤地板主廳，配備大窗景、電視櫃、書架與木質沙發（對應照片 S__23953435_0.jpg）',
+      imageFile: 'S__23953435_0.jpg',
+      floor: '2F',
+      category: '核心活動空間',
+      hotspots: [
+        { x: '20%', y: '50%', icon: '←', label: '返回過渡區', targetId: 'space-03' },
+        { x: '75%', y: '45%', icon: '➚', label: '前往二樓平台', targetId: 'space-05' }
+      ]
+    },
+    {
+      id: 'space-05',
+      name: '二樓樓梯平台與天井迴廊',
+      description: '挑高天井空間，鐵藝欄杆設計，白色牆面與木質門（對應照片 S__23953436_0.jpg）',
+      imageFile: 'S__23953436_0.jpg',
+      floor: '2F',
+      category: '垂直動線',
+      hotspots: [
+        { x: '25%', y: '65%', icon: '↓', label: '下樓至主廳', targetId: 'space-04' },
+        { x: '70%', y: '50%', icon: '→', label: '前往電梯區', targetId: 'space-06' }
+      ]
+    },
+    {
+      id: 'space-06',
+      name: '電梯迎賓廳',
+      description: '金色菱形圖案裝飾電梯門，鐵藝欄杆與木地板（對應照片 S__23953437_0.jpg）',
+      imageFile: 'S__23953437_0.jpg',
+      floor: '2F',
+      category: '電梯區域',
+      hotspots: [
+        { x: '30%', y: '50%', icon: '←', label: '返回平台', targetId: 'space-05' },
+        { x: '60%', y: '50%', icon: '🛗', label: '搭電梯下樓', targetId: 'space-07' }
+      ]
+    },
+    {
+      id: 'space-07',
+      name: '一樓挑高迎賓客廳',
+      description: '磨石子地板挑高空間，懸挑樓梯、紅色沙發、金色佛像與拱門（對應照片 S__23953438_0.jpg）',
+      imageFile: 'S__23953438_0.jpg',
+      floor: '1F',
+      category: '迎賓與交誼空間',
+      hotspots: [
+        { x: '75%', y: '35%', icon: '⬆', label: '搭電梯上樓', targetId: 'space-06' },
+        { x: '50%', y: '70%', icon: '↘', label: '前往休閒區', targetId: 'space-08' }
+      ]
+    },
+    {
+      id: 'space-08',
+      name: '休閒交流客廳（另一視角）',
+      description: '橘色皮沙發、藤椅與鳥類裝飾牆面，磨石子地板（對應照片 S__23953439_0.jpg）',
+      imageFile: 'S__23953439_0.jpg',
+      floor: '1F',
+      category: '休閒區',
+      hotspots: [
+        { x: '30%', y: '50%', icon: '↖', label: '返回挑高客廳', targetId: 'space-07' },
+        { x: '70%', y: '50%', icon: '→', label: '前往長廊', targetId: 'space-09' }
+      ]
+    },
+    {
+      id: 'space-09',
+      name: '主要通道長廊',
+      description: '磨石子地板長廊，木質護牆板與吊燈，入口處有高低差（對應照片 S__23953440_0.jpg）',
+      imageFile: 'S__23953440_0.jpg',
+      floor: '1F',
+      category: '通道',
+      hotspots: [
+        { x: '25%', y: '50%', icon: '←', label: '返回休閒區', targetId: 'space-08' },
+        { x: '70%', y: '50%', icon: '→', label: '前往樓梯區', targetId: 'space-10' }
+      ]
+    },
+    {
+      id: 'space-10',
+      name: '樓梯轉角與展示區',
+      description: '黑白棋盤地板樓梯轉角，木質護牆板與展示櫃（對應照片 S__23953441_0.jpg）',
+      imageFile: 'S__23953441_0.jpg',
+      floor: '1F',
+      category: '樓梯與展示',
+      hotspots: [
+        { x: '30%', y: '50%', icon: '←', label: '返回長廊', targetId: 'space-09' },
+        { x: '60%', y: '35%', icon: '🏠', label: '回到入口', targetId: 'space-01' }
+      ]
+    }
+  ]
+};
+
+// ========================================
+// 全域狀態
+// ========================================
+let currentSpaceId = 'space-01';
+let isTransitioning = false;
+
+const spaceImage = document.getElementById('current-space-image');
+const hotspotsLayer = document.getElementById('hotspots-layer');
+const transitionNotice = document.getElementById('transition-notice');
+
+// ========================================
+// 初始化系統
+// ========================================
+function init() {
+  renderMinimap();
+  loadSpace(currentSpaceId);
+  
+  document.getElementById('btn-home').onclick = () => loadSpace('space-01');
+  document.getElementById('btn-info').onclick = showSpaceInfo;
+  
+  setTimeout(() => {
+    document.getElementById('loading-screen').classList.add('hidden');
+  }, 1000);
+}
+
+// ========================================
+// 載入空間
+// ========================================
+function loadSpace(spaceId) {
+  if (isTransitioning) return;
+  
+  const space = SPACE_DATA.spaces.find(s => s.id === spaceId);
+  if (!space) return;
+  
+  isTransitioning = true;
+  currentSpaceId = spaceId;
+  
+  // 顯示過場提示
+  transitionNotice.classList.add('show');
+  setTimeout(() => transitionNotice.classList.remove('show'), 1800);
+  
+  // 淡出
+  spaceImage.classList.add('fade-out');
+  
+  setTimeout(() => {
+    // 更新圖片
+    spaceImage.src = space.imageFile;
+    
+    // 更新資訊
+    document.getElementById('space-title').textContent = space.name;
+    document.getElementById('space-description').textContent = space.description;
+    
+    // 渲染熱點
+    renderHotspots(space.hotspots);
+    
+    // 更新小地圖
+    updateMinimap();
+    
+    // 淡入
+    spaceImage.classList.remove('fade-out');
+    isTransitioning = false;
+  }, 600);
+}
+
+// ========================================
+// 渲染導航熱點
+// ========================================
+function renderHotspots(hotspots) {
+  hotspotsLayer.innerHTML = '';
+  
+  hotspots.forEach(spot => {
+    const hotspot = document.createElement('div');
+    hotspot.className = 'navigation-hotspot';
+    hotspot.style.left = spot.x;
+    hotspot.style.top = spot.y;
+    hotspot.innerHTML = `
+      <div class="hotspot-circle">${spot.icon}</div>
+      <div class="hotspot-label">${spot.label}</div>
+    `;
+    hotspot.onclick = () => loadSpace(spot.targetId);
+    hotspotsLayer.appendChild(hotspot);
+  });
+}
+
+// ========================================
+// 渲染小地圖
+// ========================================
+function renderMinimap() {
+  const list = document.getElementById('minimap-list');
+  list.innerHTML = '';
+  
+  SPACE_DATA.spaces.forEach(space => {
+    const node = document.createElement('div');
+    node.className = 'map-node';
+    node.innerHTML = `
+      <div class="map-dot"></div>
+      <span>${space.floor} ${space.name}</span>
+    `;
+    node.onclick = () => loadSpace(space.id);
+    list.appendChild(node);
+  });
