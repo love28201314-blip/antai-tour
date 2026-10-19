@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>安台共造園區｜虛擬導覽（除錯版）</title>
+  <title>安台共造園區｜虛擬實景導覽</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
   <style>
     * {
@@ -14,22 +14,9 @@
     }
 
     body {
-      background: #1a1a2e;
+      background: #0a0a0f;
       color: white;
       overflow: hidden;
-    }
-
-    #debug-panel {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      background: rgba(255, 0, 0, 0.9);
-      padding: 15px;
-      border-radius: 10px;
-      z-index: 9999;
-      font-size: 14px;
-      max-width: 500px;
-      font-family: monospace;
     }
 
     #viewer {
@@ -39,66 +26,83 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      background: linear-gradient(135deg, #1e1e2e 0%, #0a0a0f 100%);
     }
 
     #current-image {
-      max-width: 90%;
-      max-height: 90vh;
+      max-width: 85%;
+      max-height: 85vh;
       object-fit: contain;
-      border: 5px solid #fbbf24;
-      border-radius: 15px;
-      box-shadow: 0 10px 50px rgba(0, 0, 0, 0.8);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+      transition: opacity 0.5s ease;
     }
 
-    #info {
+    #current-image.fade {
+      opacity: 0.3;
+    }
+
+    #info-bar {
       position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.9);
-      padding: 20px 40px;
-      border-radius: 15px;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+      padding: 30px;
       text-align: center;
-      backdrop-filter: blur(10px);
+    }
+
+    #space-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 8px 20px;
+      border-radius: 25px;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
     }
 
     #space-title {
-      font-size: 28px;
+      font-size: 36px;
       font-weight: 900;
       color: #fbbf24;
       margin-bottom: 10px;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
     }
 
     #space-desc {
-      font-size: 16px;
-      color: #fff;
+      font-size: 18px;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
     }
 
-    .nav-buttons {
+    #controls {
       position: absolute;
-      bottom: 30px;
+      bottom: 40px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
-      gap: 15px;
+      gap: 20px;
+      align-items: center;
     }
 
     .nav-btn {
-      padding: 15px 30px;
+      padding: 18px 40px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       border: none;
-      border-radius: 12px;
+      border-radius: 15px;
       color: white;
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.3s;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
     }
 
-    .nav-btn:hover {
-      transform: scale(1.1);
-      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.6);
+    .nav-btn:hover:not(:disabled) {
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.7);
     }
 
     .nav-btn:disabled {
@@ -106,25 +110,106 @@
       cursor: not-allowed;
     }
 
+    #counter {
+      background: rgba(0, 0, 0, 0.9);
+      padding: 15px 30px;
+      border-radius: 15px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fbbf24;
+      border: 2px solid rgba(251, 191, 36, 0.3);
+    }
+
+    #minimap {
+      position: absolute;
+      bottom: 40px;
+      left: 40px;
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(20px);
+      padding: 20px;
+      border-radius: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      max-width: 300px;
+      max-height: 60vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    }
+
+    #minimap-title {
+      font-size: 16px;
+      font-weight: 900;
+      margin-bottom: 15px;
+      color: #fbbf24;
+      border-bottom: 2px solid rgba(251, 191, 36, 0.3);
+      padding-bottom: 10px;
+    }
+
+    .map-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 14px;
+    }
+
+    .map-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      transform: translateX(5px);
+    }
+
+    .map-item.active {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+      color: #fbbf24;
+      font-weight: 700;
+      border: 2px solid rgba(251, 191, 36, 0.5);
+    }
+
+    .map-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      flex-shrink: 0;
+    }
+
+    .map-item.active .map-dot {
+      background: #fbbf24;
+      box-shadow: 0 0 15px #fbbf24;
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
     #loading {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.95);
+      background: linear-gradient(135deg, #1e1e2e 0%, #0a0a0f 100%);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 1000;
+      transition: opacity 0.5s;
     }
 
     #loading.hidden {
-      display: none;
+      opacity: 0;
+      pointer-events: none;
     }
 
     .spinner {
-      width: 70px;
-      height: 70px;
-      border: 5px solid rgba(255, 255, 255, 0.2);
+      width: 80px;
+      height: 80px;
+      border: 6px solid rgba(255, 255, 255, 0.1);
       border-top-color: #fbbf24;
       border-radius: 50%;
       animation: spin 1s linear infinite;
@@ -137,182 +222,133 @@
     #loading-text {
       color: white;
       margin-top: 25px;
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 700;
     }
 
-    #error-msg {
-      color: #ff4444;
-      margin-top: 10px;
-      font-size: 14px;
+    @media (max-width: 768px) {
+      #space-title { font-size: 24px; }
+      #space-desc { font-size: 16px; }
+      .nav-btn { padding: 15px 30px; font-size: 18px; }
+      #minimap { bottom: 20px; left: 20px; max-width: 250px; }
     }
   </style>
 </head>
 <body>
 
-<div id="debug-panel">
-  <strong>🔍 除錯資訊：</strong><br>
-  <span id="debug-info">正在檢查檔案...</span>
-</div>
-
 <div id="loading">
   <div class="spinner"></div>
-  <div id="loading-text">檢查照片檔案中...</div>
-  <div id="error-msg"></div>
+  <div id="loading-text">載入虛擬導覽系統...</div>
 </div>
 
-<div id="viewer" style="display: none;">
-  <div id="info">
+<div id="viewer">
+  <div id="info-bar">
+    <div id="space-badge">🏛️ 安台共造園區</div>
     <div id="space-title">載入中...</div>
     <div id="space-desc">準備顯示照片</div>
   </div>
 
   <img id="current-image" src="" alt="場域照片" />
 
-  <div class="nav-buttons">
-    <button class="nav-btn" id="btn-prev">◀ 上一張</button>
-    <button class="nav-btn" id="btn-next">下一張 ▶</button>
+  <div id="controls">
+    <button class="nav-btn" id="btn-prev">◀ 上一個空間</button>
+    <div id="counter">1 / 10</div>
+    <button class="nav-btn" id="btn-next">下一個空間 ▶</button>
+  </div>
+
+  <div id="minimap">
+    <div id="minimap-title">🗺️ 場域導覽地圖</div>
+    <div id="map-list"></div>
   </div>
 </div>
 
 <script>
-// 簡化的照片列表（只用檔名）
-const PHOTOS = [
-  {
-    file: 'S__23953432_0.jpg',
-    title: '1. 木地板房間',
-    desc: '深色木天花板空間'
-  },
-  {
-    file: 'S__23953433_0.jpg',
-    title: '2. 浴室',
-    desc: '白色磁磚浴室'
-  },
-  {
-    file: 'S__23953434_0.jpg',
-    title: '3. 過渡區',
-    desc: '黑白棋盤地板交界'
-  },
-  {
-    file: 'S__23953435_0.jpg',
-    title: '4. 主客廳',
-    desc: '黑白棋盤地板主廳'
-  },
-  {
-    file: 'S__23953436_0.jpg',
-    title: '5. 二樓平台',
-    desc: '挑高天井空間'
-  },
-  {
-    file: 'S__23953437_0.jpg',
-    title: '6. 電梯區',
-    desc: '金色電梯門'
-  },
-  {
-    file: 'S__23953438_0.jpg',
-    title: '7. 一樓客廳',
-    desc: '挑高迎賓空間'
-  },
-  {
-    file: 'S__23953439_0.jpg',
-    title: '8. 休閒區',
-    desc: '橘色皮沙發區'
-  },
-  {
-    file: 'S__23953440_0.jpg',
-    title: '9. 長廊',
-    desc: '磨石子地板長廊'
-  },
-  {
-    file: 'S__23953441_0.jpg',
-    title: '10. 樓梯區',
-    desc: '黑白棋盤樓梯'
-  }
+const SPACES = [
+  { file: 'S__23953432_0.jpg', title: '木地板評估室', desc: '深色木天花板空間，配備大型木質衣櫃' },
+  { file: 'S__23953433_0.jpg', title: '無障礙衛浴空間', desc: '白色磁磚浴室，配備古典金腳浴缸' },
+  { file: 'S__23953434_0.jpg', title: '地板材質過渡區', desc: '黑白棋盤地板與深色木地板交界處' },
+  { file: 'S__23953435_0.jpg', title: '主活動客廳', desc: '黑白棋盤地板主廳，配備大窗景與書架' },
+  { file: 'S__23953436_0.jpg', title: '二樓樓梯平台', desc: '挑高天井空間，鐵藝欄杆設計' },
+  { file: 'S__23953437_0.jpg', title: '電梯迎賓廳', desc: '金色菱形圖案裝飾電梯門' },
+  { file: 'S__23953438_0.jpg', title: '一樓挑高客廳', desc: '磨石子地板挑高空間，懸挑樓梯與紅色沙發' },
+  { file: 'S__23953439_0.jpg', title: '休閒交流客廳', desc: '橘色皮沙發、藤椅與鳥類裝飾牆面' },
+  { file: 'S__23953440_0.jpg', title: '主要通道長廊', desc: '磨石子地板長廊，木質護牆板與吊燈' },
+  { file: 'S__23953441_0.jpg', title: '樓梯轉角展示區', desc: '黑白棋盤地板樓梯轉角，木質護牆板' }
 ];
 
 let currentIndex = 0;
-let loadedPhotos = [];
 
-const debugInfo = document.getElementById('debug-info');
-const loadingScreen = document.getElementById('loading');
-const loadingText = document.getElementById('loading-text');
-const errorMsg = document.getElementById('error-msg');
+const loading = document.getElementById('loading');
 const viewer = document.getElementById('viewer');
 const currentImage = document.getElementById('current-image');
 const spaceTitle = document.getElementById('space-title');
 const spaceDesc = document.getElementById('space-desc');
+const counter = document.getElementById('counter');
 const btnPrev = document.getElementById('btn-prev');
 const btnNext = document.getElementById('btn-next');
+const mapList = document.getElementById('map-list');
 
-// 檢查所有照片是否存在
-async function checkAllPhotos() {
-  debugInfo.innerHTML = '正在檢查 10 張照片...<br>';
-  loadingText.textContent = '正在檢查照片檔案...';
-
-  for (let i = 0; i < PHOTOS.length; i++) {
-    const photo = PHOTOS[i];
-    const exists = await checkPhoto(photo.file);
-    
-    if (exists) {
-      loadedPhotos.push(photo);
-      debugInfo.innerHTML += `✅ ${photo.file} - 找到了！<br>`;
-    } else {
-      debugInfo.innerHTML += `❌ ${photo.file} - 找不到！<br>`;
-    }
-  }
-
-  if (loadedPhotos.length === 0) {
-    errorMsg.textContent = `❌ 錯誤：找不到任何照片檔案！請確認檔案是否放在 index.html 同一個資料夾。`;
-    debugInfo.innerHTML += '<br><strong style="color: yellow;">⚠️ 所有照片都找不到！請檢查檔案位置。</strong>';
-  } else {
-    debugInfo.innerHTML += `<br><strong style="color: lime;">✅ 成功找到 ${loadedPhotos.length} 張照片！</strong>`;
-    setTimeout(() => {
-      loadingScreen.classList.add('hidden');
-      viewer.style.display = 'block';
-      showPhoto(0);
-    }, 1500);
-  }
+function init() {
+  renderMinimap();
+  showSpace(0);
+  
+  // 快速隱藏載入畫面
+  setTimeout(() => {
+    loading.classList.add('hidden');
+  }, 100);  // ← 改成 0.1 秒立即顯示
 }
 
-// 檢查單張照片是否存在
-function checkPhoto(filename) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(true);
-    img.onerror = () => resolve(false);
-    img.src = filename;
+function showSpace(index) {
+  if (index < 0 || index >= SPACES.length) return;
+  
+  currentIndex = index;
+  const space = SPACES[index];
+  
+  currentImage.classList.add('fade');
+  
+  setTimeout(() => {
+    currentImage.src = space.file;
+    spaceTitle.textContent = space.title;
+    spaceDesc.textContent = space.desc;
+    counter.textContent = `${index + 1} / ${SPACES.length}`;
+    
+    btnPrev.disabled = (index === 0);
+    btnNext.disabled = (index === SPACES.length - 1);
+    
+    updateMinimap();
+    currentImage.classList.remove('fade');
+  }, 250);
+}
+
+function renderMinimap() {
+  SPACES.forEach((space, i) => {
+    const item = document.createElement('div');
+    item.className = 'map-item';
+    item.innerHTML = `
+      <div class="map-dot"></div>
+      <span>${i + 1}. ${space.title}</span>
+    `;
+    item.onclick = () => showSpace(i);
+    mapList.appendChild(item);
   });
 }
 
-// 顯示照片
-function showPhoto(index) {
-  if (index < 0 || index >= loadedPhotos.length) return;
-  
-  currentIndex = index;
-  const photo = loadedPhotos[index];
-  
-  currentImage.src = photo.file;
-  spaceTitle.textContent = photo.title;
-  spaceDesc.textContent = photo.desc;
-  
-  btnPrev.disabled = (index === 0);
-  btnNext.disabled = (index === loadedPhotos.length - 1);
-  
-  debugInfo.innerHTML = `當前顯示：${photo.file} (${index + 1}/${loadedPhotos.length})`;
+function updateMinimap() {
+  const items = document.querySelectorAll('.map-item');
+  items.forEach((item, i) => {
+    item.classList.toggle('active', i === currentIndex);
+  });
 }
 
-// 按鈕事件
-btnPrev.onclick = () => showPhoto(currentIndex - 1);
-btnNext.onclick = () => showPhoto(currentIndex + 1);
+btnPrev.onclick = () => showSpace(currentIndex - 1);
+btnNext.onclick = () => showSpace(currentIndex + 1);
 
-// 鍵盤快捷鍵
 document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft') btnPrev.click();
   if (e.key === 'ArrowRight') btnNext.click();
 });
 
-// 啟動檢查
-checkAllPhotos();
+init();
 </script>
 
 </body>
