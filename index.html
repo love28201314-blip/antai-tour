@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>安台共造園區｜真實 3D 虛擬導覽</title>
+  <title>安台共造園區｜3D虛擬導覽</title>
   <style>
     * {
       margin: 0;
@@ -12,206 +12,183 @@
     }
 
     body {
-      font-family: 'Noto Sans TC', -apple-system, sans-serif;
+      font-family: 'Noto Sans TC', sans-serif;
       overflow: hidden;
       background: #000;
     }
 
-    #info-panel {
+    #info {
       position: fixed;
       top: 20px;
       left: 20px;
-      background: rgba(0, 0, 0, 0.92);
+      background: rgba(0, 0, 0, 0.9);
       color: white;
-      padding: 20px 25px;
-      border-radius: 15px;
-      border: 2px solid rgba(251, 191, 36, 0.6);
-      backdrop-filter: blur(15px);
+      padding: 20px;
+      border-radius: 12px;
+      border: 2px solid #fbbf24;
       z-index: 100;
-      max-width: 380px;
+      max-width: 350px;
     }
 
     #mode-badge {
       display: inline-block;
-      padding: 6px 16px;
-      border-radius: 20px;
+      padding: 6px 15px;
+      border-radius: 15px;
       font-size: 12px;
       font-weight: 700;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     #mode-badge.current {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      background: linear-gradient(135deg, #10b981, #059669);
     }
 
     #mode-badge.future {
-      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      background: linear-gradient(135deg, #f59e0b, #d97706);
     }
 
-    #room-title {
-      font-size: 24px;
+    #title {
+      font-size: 22px;
       font-weight: 900;
       color: #fbbf24;
       margin-bottom: 8px;
     }
 
-    #room-desc {
+    #desc {
       font-size: 14px;
-      line-height: 1.6;
-      opacity: 0.95;
+      line-height: 1.5;
     }
 
     #controls {
       position: fixed;
       bottom: 20px;
       left: 20px;
-      background: rgba(0, 0, 0, 0.92);
+      background: rgba(0, 0, 0, 0.9);
       color: white;
-      padding: 15px 20px;
-      border-radius: 12px;
+      padding: 15px;
+      border-radius: 10px;
       border: 2px solid rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(15px);
       z-index: 100;
       font-size: 13px;
-      line-height: 1.9;
+      line-height: 1.8;
     }
 
-    .key {
-      display: inline-block;
-      background: rgba(102, 126, 234, 0.3);
-      padding: 2px 9px;
-      border-radius: 5px;
-      font-family: 'Courier New', monospace;
-      font-weight: 700;
-      border: 1px solid rgba(102, 126, 234, 0.5);
-    }
-
-    #mode-switcher {
+    #mode-btns {
       position: fixed;
       top: 20px;
       right: 20px;
       z-index: 100;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
     .mode-btn {
-      padding: 14px 28px;
-      background: rgba(0, 0, 0, 0.92);
+      padding: 12px 25px;
+      background: rgba(0, 0, 0, 0.9);
       border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 12px;
+      border-radius: 10px;
       color: white;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.3s;
-      backdrop-filter: blur(15px);
-      text-align: left;
     }
 
     .mode-btn:hover {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-color: #fbbf24;
-      transform: translateX(-8px);
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      transform: translateX(-5px);
     }
 
     .mode-btn.active {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      background: linear-gradient(135deg, #10b981, #059669);
       border-color: #10b981;
     }
 
-    #room-navigator {
+    #navigator {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      background: rgba(0, 0, 0, 0.92);
+      background: rgba(0, 0, 0, 0.9);
       border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 15px;
-      padding: 18px;
-      backdrop-filter: blur(15px);
+      border-radius: 12px;
+      padding: 15px;
       z-index: 100;
-      max-width: 280px;
-      max-height: 70vh;
+      max-width: 250px;
+      max-height: 60vh;
       overflow-y: auto;
     }
 
-    #navigator-title {
+    #nav-title {
       color: #fbbf24;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 900;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
       text-align: center;
       border-bottom: 2px solid rgba(251, 191, 36, 0.3);
-      padding-bottom: 10px;
+      padding-bottom: 8px;
     }
 
-    .room-item {
+    .room-btn {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 10px;
+      gap: 10px;
+      padding: 8px;
+      margin: 6px 0;
+      border-radius: 8px;
       cursor: pointer;
       transition: all 0.3s;
       color: rgba(255, 255, 255, 0.8);
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 12px;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
     }
 
-    .room-item:hover {
-      background: rgba(255, 255, 255, 0.12);
+    .room-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
       color: white;
-      transform: translateX(5px);
     }
 
-    .room-item.active {
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.35) 0%, rgba(118, 75, 162, 0.35) 100%);
+    .room-btn.active {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
       color: #fbbf24;
       border: 2px solid rgba(251, 191, 36, 0.5);
     }
 
-    .room-dot {
-      width: 10px;
-      height: 10px;
+    .dot {
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.5);
       flex-shrink: 0;
     }
 
-    .room-item.active .room-dot {
+    .room-btn.active .dot {
       background: #fbbf24;
-      box-shadow: 0 0 15px #fbbf24;
-      animation: blink 1.5s infinite;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
+      box-shadow: 0 0 10px #fbbf24;
     }
 
     #loading {
       position: fixed;
       inset: 0;
-      background: linear-gradient(135deg, #1e1e2e 0%, #0a0a0f 100%);
+      background: linear-gradient(135deg, #1e1e2e, #0a0a0f);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 1000;
-      transition: opacity 0.8s;
     }
 
     #loading.hidden {
-      opacity: 0;
-      pointer-events: none;
+      display: none;
     }
 
     .spinner {
-      width: 75px;
-      height: 75px;
-      border: 6px solid rgba(255, 255, 255, 0.1);
+      width: 60px;
+      height: 60px;
+      border: 5px solid rgba(255, 255, 255, 0.1);
       border-top-color: #10b981;
       border-radius: 50%;
       animation: spin 1s linear infinite;
@@ -223,21 +200,9 @@
 
     #loading-text {
       color: white;
-      margin-top: 22px;
-      font-size: 21px;
+      margin-top: 20px;
+      font-size: 18px;
       font-weight: 700;
-    }
-
-    #loading-progress {
-      color: #10b981;
-      margin-top: 12px;
-      font-size: 15px;
-    }
-
-    @media (max-width: 768px) {
-      #info-panel { max-width: 300px; font-size: 12px; }
-      #room-navigator { max-width: 240px; }
-      #controls { font-size: 11px; }
     }
   </style>
 </head>
@@ -245,45 +210,43 @@
 
 <div id="canvas-container"></div>
 
-<div id="info-panel">
+<div id="info">
   <div id="mode-badge" class="current">🏛️ 現況場景</div>
-  <div id="room-title">安台共造園區</div>
-  <div id="room-desc">載入真實建築照片中...</div>
+  <div id="title">安台共造園區</div>
+  <div id="desc">載入中...</div>
 </div>
 
 <div id="controls">
   <strong>🎮 操作說明</strong><br>
-  <span class="key">滑鼠拖曳</span> 旋轉視角<br>
-  <span class="key">滾輪</span> 縮放遠近<br>
-  <span class="key">右鍵拖曳</span> 平移位置<br>
-  <span class="key">點擊房間</span> 切換空間
+  滑鼠拖曳：旋轉視角<br>
+  滾輪：縮放遠近<br>
+  點擊房間：切換空間
 </div>
 
-<div id="mode-switcher">
-  <button class="mode-btn active" onclick="switchMode('current')">
+<div id="mode-btns">
+  <button class="mode-btn active" onclick="setMode('current')">
     🏛️ 現況場景
   </button>
-  <button class="mode-btn" onclick="switchMode('future')">
-    ✨ 未來改造<br><small style="opacity:0.8">（失智症日照據點）</small>
+  <button class="mode-btn" onclick="setMode('future')">
+    ✨ 未來改造
   </button>
 </div>
 
-<div id="room-navigator">
-  <div id="navigator-title">🗺️ 空間導覽</div>
+<div id="navigator">
+  <div id="nav-title">🗺️ 空間導覽</div>
   <div id="room-list"></div>
 </div>
 
 <div id="loading">
   <div class="spinner"></div>
-  <div id="loading-text">建構真實 3D 空間...</div>
-  <div id="loading-progress">載入照片 0/10</div>
+  <div id="loading-text">建構 3D 空間...</div>
 </div>
 
 <script type="importmap">
 {
   "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
   }
 }
 </script>
@@ -292,363 +255,217 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// =============================================
-// 真實空間資料（基於你的 10 張照片）
-// =============================================
 const ROOMS = [
-  {
-    id: 1,
-    name: '木地板評估室',
-    desc: '深色木質天花板空間，配備大型木衣櫃，可通往廚房與其他房間',
-    image: 'S__23953432_0.jpg',
-    position: [0, 4, 0],
-    size: [8, 3.2, 6],
-    floor: '2F'
-  },
-  {
-    id: 2,
-    name: '無障礙衛浴空間',
-    desc: '白色磁磚浴室，配備古典金腳浴缸、立柱洗手盆與馬桶',
-    image: 'S__23953433_0.jpg',
-    position: [10, 4, 0],
-    size: [4.5, 3, 3.5],
-    floor: '2F'
-  },
-  {
-    id: 3,
-    name: '玄關過渡區',
-    desc: '黑白大理石棋盤地板與木地板交界，設有木質屏風隔間',
-    image: 'S__23953434_0.jpg',
-    position: [0, 4, -8],
-    size: [8, 3.2, 5],
-    floor: '2F'
-  },
-  {
-    id: 4,
-    name: '主活動客廳',
-    desc: '黑白棋盤地板主廳，配備大窗景、書櫃、電視與實木沙發',
-    image: 'S__23953435_0.jpg',
-    position: [-12, 4, 0],
-    size: [10, 3.2, 8],
-    floor: '2F'
-  },
-  {
-    id: 5,
-    name: '二樓樓梯平台',
-    desc: '挑高天井空間，精緻鐵藝欄杆設計，可俯瞰一樓客廳',
-    image: 'S__23953436_0.jpg',
-    position: [0, 4, 10],
-    size: [6, 5, 6],
-    floor: '2F'
-  },
-  {
-    id: 6,
-    name: '電梯迎賓廳',
-    desc: '金色菱形圖案裝飾電梯門，連接各樓層的優雅空間',
-    image: 'S__23953437_0.jpg',
-    position: [8, 4, 10],
-    size: [5, 3.5, 5],
-    floor: '2F'
-  },
-  {
-    id: 7,
-    name: '一樓挑高迎賓客廳',
-    desc: '磨石子地板挑高空間，懸挑樓梯、紅色沙發、金色佛像與拱門',
-    image: 'S__23953438_0.jpg',
-    position: [0, 0, 0],
-    size: [12, 6, 10],
-    floor: '1F'
-  },
-  {
-    id: 8,
-    name: '休閒交流客廳',
-    desc: '橘色皮沙發、藤椅與精美鳥類剪影牆飾，磨石子地板',
-    image: 'S__23953439_0.jpg',
-    position: [-15, 0, 0],
-    size: [8, 3.5, 7],
-    floor: '1F'
-  },
-  {
-    id: 9,
-    name: '主要通道長廊',
-    desc: '磨石子地板長廊，木質護牆板與復古吊燈，入口處有門檻高低差',
-    image: 'S__23953440_0.jpg',
-    position: [0, 0, -12],
-    size: [15, 3.5, 4],
-    floor: '1F'
-  },
-  {
-    id: 10,
-    name: '樓梯轉角展示區',
-    desc: '黑白大理石棋盤地板樓梯轉角，木質護牆板與展示櫃',
-    image: 'S__23953441_0.jpg',
-    position: [10, 0, -8],
-    size: [6, 5, 6],
-    floor: '1F'
-  }
+  { id: 1, name: '木地板評估室', desc: '深色木天花板空間', img: 'S__23953432_0.jpg', pos: [0, 4, 0], size: [8, 3, 6], floor: '2F' },
+  { id: 2, name: '無障礙衛浴', desc: '白色磁磚浴室', img: 'S__23953433_0.jpg', pos: [10, 4, 0], size: [4.5, 3, 3.5], floor: '2F' },
+  { id: 3, name: '玄關過渡區', desc: '黑白棋盤地板', img: 'S__23953434_0.jpg', pos: [0, 4, -8], size: [8, 3, 5], floor: '2F' },
+  { id: 4, name: '主活動客廳', desc: '書櫃與沙發區', img: 'S__23953435_0.jpg', pos: [-12, 4, 0], size: [10, 3, 8], floor: '2F' },
+  { id: 5, name: '二樓平台', desc: '挑高天井空間', img: 'S__23953436_0.jpg', pos: [0, 4, 10], size: [6, 5, 6], floor: '2F' },
+  { id: 6, name: '電梯迎賓廳', desc: '金色電梯門', img: 'S__23953437_0.jpg', pos: [8, 4, 10], size: [5, 3.5, 5], floor: '2F' },
+  { id: 7, name: '一樓客廳', desc: '挑高迎賓空間', img: 'S__23953438_0.jpg', pos: [0, 0, 0], size: [12, 6, 10], floor: '1F' },
+  { id: 8, name: '休閒客廳', desc: '橘色沙發區', img: 'S__23953439_0.jpg', pos: [-15, 0, 0], size: [8, 3.5, 7], floor: '1F' },
+  { id: 9, name: '主通道長廊', desc: '磨石子地板', img: 'S__23953440_0.jpg', pos: [0, 0, -12], size: [15, 3.5, 4], floor: '1F' },
+  { id: 10, name: '樓梯轉角', desc: '黑白棋盤樓梯', img: 'S__23953441_0.jpg', pos: [10, 0, -8], size: [6, 5, 6], floor: '1F' }
 ];
 
-// 未來改造家具（失智症日照據點規劃）
-const FUTURE_FURNITURE = [
-  { 
-    name: '圓角認知活動桌', 
-    desc: '適合失智長者的圓角桌，用於拼圖、畫畫等認知訓練',
-    position: [-14, 0.8, 2], 
-    size: [2, 0.8, 1.5], 
-    color: 0xf4a460 
-  },
-  { 
-    name: '安全扶手椅 x4', 
-    desc: '兩側扶手設計，協助長者安全起身',
-    position: [-15.5, 0.5, 2], 
-    size: [0.6, 1, 0.6], 
-    color: 0x4682b4 
-  },
-  { 
-    name: '教具收納櫃', 
-    desc: '收納認知訓練教具、桌遊與美勞材料',
-    position: [-18, 1, 0], 
-    size: [1.5, 2, 0.5], 
-    color: 0x8b4513 
-  },
-  { 
-    name: '75吋互動觸控螢幕', 
-    desc: '播放懷舊影片、音樂與互動認知遊戲',
-    position: [2, 2, -11.8], 
-    size: [1.8, 1, 0.1], 
-    color: 0x1a1a1a 
-  },
-  { 
-    name: '懷舊記憶牆', 
-    desc: '展示老照片、舊物件，喚起長者回憶',
-    position: [-18, 2, 3], 
-    size: [1.2, 1.5, 0.1], 
-    color: 0xdaa520 
-  },
-  { 
-    name: '無障礙洗手台', 
-    desc: '符合輪椅使用者高度的洗手設施',
-    position: [12, 0.9, 1], 
-    size: [1.2, 0.9, 0.6], 
-    color: 0xffffff 
-  },
-  { 
-    name: '休憩沙發區', 
-    desc: '舒適沙發供家屬與長者交流休息',
-    position: [3, 0.6, 3], 
-    size: [3, 0.8, 2], 
-    color: 0xff6347 
-  }
+const FURNITURE = [
+  { name: '認知活動桌', pos: [-14, 0.8, 2], size: [2, 0.8, 1.5], color: 0xf4a460 },
+  { name: '安全扶手椅', pos: [-15.5, 0.5, 2], size: [0.6, 1, 0.6], color: 0x4682b4 },
+  { name: '教具收納櫃', pos: [-18, 1, 0], size: [1.5, 2, 0.5], color: 0x8b4513 },
+  { name: '互動螢幕', pos: [2, 2, -11.8], size: [1.8, 1, 0.1], color: 0x1a1a1a }
 ];
 
-// =============================================
-// Three.js 場景初始化
-// =============================================
 let scene, camera, renderer, controls;
 let roomGroups = [];
 let furnitureGroup = new THREE.Group();
 let currentMode = 'current';
 let currentRoomId = 1;
-let loadedImages = 0;
-let raycaster = new THREE.Raycaster();
-let mouse = new THREE.Vector2();
+let loaded = 0;
 
 function init() {
-  // 場景
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x87ceeb);
-  scene.fog = new THREE.Fog(0x87ceeb, 0, 100);
-
-  // 相機
+  
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
   camera.position.set(18, 12, 18);
-
-  // 渲染器
+  
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-  // 光源
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-  scene.add(ambientLight);
-
-  const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
-  sunLight.position.set(30, 40, 30);
-  sunLight.castShadow = true;
-  sunLight.shadow.camera.left = -60;
-  sunLight.shadow.camera.right = 60;
-  sunLight.shadow.camera.top = 60;
-  sunLight.shadow.camera.bottom = -60;
-  sunLight.shadow.mapSize.width = 2048;
-  sunLight.shadow.mapSize.height = 2048;
-  scene.add(sunLight);
-
-  // 軌道控制
+  
+  const light1 = new THREE.AmbientLight(0xffffff, 0.7);
+  scene.add(light1);
+  
+  const light2 = new THREE.DirectionalLight(0xffffff, 0.6);
+  light2.position.set(30, 40, 30);
+  light2.castShadow = true;
+  scene.add(light2);
+  
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
-  controls.dampingFactor = 0.06;
-  controls.minDistance = 3;
-  controls.maxDistance = 80;
   controls.maxPolarAngle = Math.PI / 2;
-
-  // 建立場景
-  buildRealSpaces();
-
-  // 家具群組
-  scene.add(furnitureGroup);
-  furnitureGroup.visible = false;
-  buildFutureFurniture();
-
-  // 渲染導航選單
-  renderNavigator();
-
-  // 事件監聽
+  
+  buildScene();
+  buildFurniture();
+  renderNav();
+  
   window.addEventListener('resize', onResize);
-  renderer.domElement.addEventListener('click', onCanvasClick);
-
-  // 開始渲染
   animate();
 }
 
-// =============================================
-// 建立真實空間（使用照片紋理）
-// =============================================
-function buildRealSpaces() {
-  const textureLoader = new THREE.TextureLoader();
-
-  ROOMS.forEach((room) => {
-    textureLoader.load(
-      room.image,
-      (texture) => {
-        createRoom(room, texture);
-        loadedImages++;
-        updateLoadingProgress();
+function buildScene() {
+  const loader = new THREE.TextureLoader();
+  
+  ROOMS.forEach(room => {
+    loader.load(
+      room.img,
+      (tex) => {
+        createRoom(room, tex);
+        loaded++;
+        if (loaded === 10) finishLoading();
       },
       undefined,
-      (error) => {
-        console.warn(`載入 ${room.image} 失敗，使用預設材質`);
+      () => {
         createRoom(room, null);
-        loadedImages++;
-        updateLoadingProgress();
+        loaded++;
+        if (loaded === 10) finishLoading();
       }
     );
   });
 }
 
-function updateLoadingProgress() {
-  document.getElementById('loading-progress').textContent = 
-    `載入照片 ${loadedImages}/10`;
-
-  if (loadedImages === 10) {
-    setTimeout(() => {
-      document.getElementById('loading').classList.add('hidden');
-      focusRoom(1);
-    }, 600);
-  }
-}
-
-function createRoom(roomData, texture) {
+function createRoom(data, texture) {
   const group = new THREE.Group();
-  const [x, y, z] = roomData.position;
-  const [w, h, d] = roomData.size;
-
+  const [x, y, z] = data.pos;
+  const [w, h, d] = data.size;
+  
   group.position.set(x, y, z);
-  group.userData = { roomId: roomData.id, roomName: roomData.name, roomDesc: roomData.desc };
-
-  // 地板
-  const floorGeo = new THREE.BoxGeometry(w, 0.15, d);
-  const floorMat = new THREE.MeshStandardMaterial({ 
-    color: 0x8b8680,
-    roughness: 0.7
-  });
+  group.userData = { roomId: data.id, roomName: data.name, roomDesc: data.desc };
+  
+  const floorGeo = new THREE.BoxGeometry(w, 0.1, d);
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0x8b8680 });
   const floor = new THREE.Mesh(floorGeo, floorMat);
   floor.receiveShadow = true;
-  floor.userData = { type: 'floor', roomId: roomData.id };
   group.add(floor);
-
-  // 牆壁材質
+  
   const wallMat = texture 
-    ? new THREE.MeshStandardMaterial({ 
-        map: texture,
-        side: THREE.DoubleSide 
-      })
-    : new THREE.MeshStandardMaterial({ 
-        color: 0xf5f5dc,
-        side: THREE.DoubleSide 
-      });
-
-  // 四面牆
+    ? new THREE.MeshStandardMaterial({ map: texture, side: THREE.DoubleSide })
+    : new THREE.MeshStandardMaterial({ color: 0xf5f5dc, side: THREE.DoubleSide });
+  
   const walls = [
-    { geo: new THREE.PlaneGeometry(w, h), pos: [0, h/2, -d/2], rot: [0, 0, 0] },
-    { geo: new THREE.PlaneGeometry(w, h), pos: [0, h/2, d/2], rot: [0, Math.PI, 0] },
-    { geo: new THREE.PlaneGeometry(d, h), pos: [-w/2, h/2, 0], rot: [0, Math.PI/2, 0] },
-    { geo: new THREE.PlaneGeometry(d, h), pos: [w/2, h/2, 0], rot: [0, -Math.PI/2, 0] }
+    { g: new THREE.PlaneGeometry(w, h), p: [0, h/2, -d/2], r: [0, 0, 0] },
+    { g: new THREE.PlaneGeometry(w, h), p: [0, h/2, d/2], r: [0, Math.PI, 0] },
+    { g: new THREE.PlaneGeometry(d, h), p: [-w/2, h/2, 0], r: [0, Math.PI/2, 0] },
+    { g: new THREE.PlaneGeometry(d, h), p: [w/2, h/2, 0], r: [0, -Math.PI/2, 0] }
   ];
-
-  walls.forEach(wallData => {
-    const wall = new THREE.Mesh(wallData.geo, wallMat.clone());
-    wall.position.set(...wallData.pos);
-    wall.rotation.set(...wallData.rot);
+  
+  walls.forEach(w => {
+    const wall = new THREE.Mesh(w.g, wallMat.clone());
+    wall.position.set(...w.p);
+    wall.rotation.set(...w.r);
     wall.castShadow = true;
     wall.receiveShadow = true;
     group.add(wall);
   });
-
-  // 天花板
+  
   const ceiling = new THREE.Mesh(
     new THREE.PlaneGeometry(w, d),
     new THREE.MeshStandardMaterial({ color: 0xe0e0e0, side: THREE.DoubleSide })
   );
   ceiling.rotation.x = Math.PI / 2;
   ceiling.position.y = h;
-  ceiling.receiveShadow = true;
   group.add(ceiling);
-
-  // 房間標籤
-  const label = createLabel(roomData.name, roomData.floor);
-  label.position.y = h + 1;
+  
+  const labelGeo = new THREE.SphereGeometry(0.3);
+  const labelMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+  const label = new THREE.Mesh(labelGeo, labelMat);
+  label.position.y = h + 0.8;
   group.add(label);
-
+  
   scene.add(group);
-  roomGroups.push({ data: roomData, group });
+  roomGroups.push({ data, group });
 }
 
-function createLabel(name, floor) {
-  const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-  canvas.width = 512;
-  canvas.height = 150;
-
-  context.fillStyle = 'rgba(0, 0, 0, 0.85)';
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  context.font = 'bold 48px Arial';
-  context.fillStyle = '#fbbf24';
-  context.textAlign = 'center';
-  context.textBaseline = 'middle';
-  context.fillText(name, canvas.width / 2, canvas.height / 2 - 15);
-
-  context.font = '32px Arial';
-  context.fillStyle = '#10b981';
-  context.fillText(floor, canvas.width / 2, canvas.height / 2 + 30);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  const material = new THREE.SpriteMaterial({ map: texture });
-  const sprite = new THREE.Sprite(material);
-  sprite.scale.set(5, 1.5, 1);
-
-  return sprite;
-}
-
-// =============================================
-// 建立未來家具
-// =============================================
-function buildFutureFurniture() {
-  FUTURE_FURNITURE.forEach(item => {
+function buildFurniture() {
+  FURNITURE.forEach(item => {
     const [w, h, d] = item.size;
     const geo = new THREE.BoxGeometry(w, h, d);
-    const mat = new THREE.MeshStandardMaterial({ 
-      
+    const mat = new THREE.MeshStandardMaterial({ color: item.color });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(...item.pos);
+    mesh.castShadow = true;
+    furnitureGroup.add(mesh);
+  });
+  
+  scene.add(furnitureGroup);
+  furnitureGroup.visible = false;
+}
+
+function renderNav() {
+  const list = document.getElementById('room-list');
+  ROOMS.forEach(room => {
+    const btn = document.createElement('button');
+    btn.className = 'room-btn';
+    btn.innerHTML = `<div class="dot"></div><span>${room.floor} ${room.name}</span>`;
+    btn.onclick = () => focusRoom(room.id);
+    list.appendChild(btn);
+  });
+}
+
+function focusRoom(id) {
+  currentRoomId = id;
+  const room = ROOMS.find(r => r.id === id);
+  const [x, y, z] = room.pos;
+  
+  controls.target.set(x, y + 1.5, z);
+  camera.position.set(x + 12, y + 8, z + 12);
+  
+  document.getElementById('title').textContent = room.name;
+  document.getElementById('desc').textContent = room.desc;
+  
+  document.querySelectorAll('.room-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i === id - 1);
+  });
+}
+
+function finishLoading() {
+  document.getElementById('loading').classList.add('hidden');
+  focusRoom(1);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+window.setMode = function(mode) {
+  currentMode = mode;
+  furnitureGroup.visible = (mode === 'future');
+  
+  document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+  
+  const badge = document.getElementById('mode-badge');
+  if (mode === 'current') {
+    document.querySelectorAll('.mode-btn')[0].classList.add('active');
+    badge.className = 'current';
+    badge.textContent = '🏛️ 現況場景';
+  } else {
+    document.querySelectorAll('.mode-btn')[1].classList.add('active');
+    badge.className = 'future';
+    badge.textContent = '✨ 未來改造';
+  }
+};
+
+init();
+</script>
+
+</body>
+</html>
